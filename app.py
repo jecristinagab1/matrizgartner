@@ -5,56 +5,36 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import requests
 from io import BytesIO
 
-st.set_page_config(page_title="Matriz de Gartner", layout="wide")
+# ------------------
+# CONFIGURAÇÃO INICIAL
+# ------------------
+st.set_page_config(page_title="Análise de Concorrência", layout="wide")
 
-st.title("📊 Matriz de Gartner Interativa")
+# Inicializa os dados na sessão do Streamlit
+if "concorrentes" not in st.session_state:
+    st.session_state.concorrentes = pd.DataFrame(
+        [
+            ["FluencyPass", 0, 0, "https://i.ibb.co/NVbyMKD/fluency-pass.png"],
+            ["Fluency Academy", 0, 0, "https://i.ibb.co/7tRhz0r/fluency-academy.png"],
+            ["Open English", 0, 0, "https://i.ibb.co/stC9gr6/open-english.png"],
+            ["GoFluent", 0, 0, "https://i.ibb.co/Dkqf08Y/gofluent.png"],
+            ["Rosetta", 0, 0, "https://i.ibb.co/HqDKqzg/rosetta.png"],
+            ["Voxy", 0, 0, "https://i.ibb.co/bbXm5vN/voxy.png"],
+            ["Nulinga", 0, 0, "https://i.ibb.co/xSbgHzW/nulinga.png"],
+            ["Berlitz", 0, 0, "https://i.ibb.co/y0TmqmS/berlitz.png"],
+            ["Yázigi", 0, 0, "https://i.ibb.co/wM1n1Bh/yazigi.png"],
+            ["Flexge", 0, 0, "https://i.ibb.co/cXtpCqy/flexge.png"],
+            ["Preply", 0, 0, "https://i.ibb.co/WDJtvmK/preply.png"],
+            ["English Live", 0, 0, "https://i.ibb.co/8gyt7HK/english-live.png"],
+        ],
+        columns=["Concorrente", "Nota Execução", "Nota Visão", "URL Logo"]
+    )
 
-# Inicializa ou recupera os dados
-if "df" not in st.session_state:
-    dados_iniciais = [
-        ["FluencyPass", None, None, "https://i.ibb.co/NVbyMKD/fluency-pass.png"],
-        ["Fluency Academy", None, None, "https://i.ibb.co/7tRhz0r/fluency-academy.png"],
-        ["Open English", None, None, "https://i.ibb.co/stC9gr6/open-english.png"],
-        ["GoFluent", None, None, "https://i.ibb.co/Dkqf08Y/gofluent.png"],
-        ["Rosetta", None, None, "https://i.ibb.co/HqDKqzg/rosetta.png"],
-        ["Voxy", None, None, "https://i.ibb.co/bbXm5vN/voxy.png"],
-        ["Nulinga", None, None, "https://i.ibb.co/xSbgHzW/nulinga.png"],
-        ["Berlitz", None, None, "https://i.ibb.co/y0TmqmS/berlitz.png"],
-        ["Yázigi", None, None, "https://i.ibb.co/wM1n1Bh/yazigi.png"],
-        ["Flexge", None, None, "https://i.ibb.co/cXtpCqy/flexge.png"],
-        ["Preply", None, None, "https://i.ibb.co/WDJtvmK/preply.png"],
-        ["English Live", None, None, "https://i.ibb.co/8gyt7HK/english-live.png"]
-    ]
-    st.session_state.df = pd.DataFrame(dados_iniciais, columns=["Concorrente", "Nota Execução", "Nota Visão", "URL Logo"])
-
-df = st.session_state.df
-
-# Editor de dados
-df = st.data_editor(df, num_rows="dynamic")
-
-# Corrige colagem de notas com vírgula
-for col in ["Nota Execução", "Nota Visão"]:
-    df[col] = df[col].astype(str).replace("None", "").str.replace(",", ".", regex=True)
-    df[col] = pd.to_numeric(df[col], errors='coerce').astype("Float64")
-
-st.session_state.df = df
-
-# Função para carregar imagem
-@st.cache_data
-def carregar_imagem(url_logo):
-    if not url_logo:
-        return None
-    try:
-        response = requests.get(url_logo)
-        img_data = BytesIO(response.content)
-        return OffsetImage(plt.imread(img_data, format='png'), zoom=0.08)  # Reduz tamanho do logo
-    except:
-        return None
-
-# Gerar gráfico
-if st.button("📈 Gerar gráfico"):
-    st.subheader("📊 Gráfico da Matriz de Gartner")
-    fig, ax = plt.subplots(figsize=(10, 10))
+# ------------------
+# FUNÇÃO PARA GERAR GRÁFICO
+# ------------------
+def gerar_grafico(df):
+    fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_xlim(1, 5)
     ax.set_ylim(1, 5)
     ax.axhline(y=3, color="gray", linestyle="--", linewidth=1)
@@ -62,32 +42,52 @@ if st.button("📈 Gerar gráfico"):
     ax.set_xlabel("Visão")
     ax.set_ylabel("Execução")
     ax.grid(True, linestyle='--', linewidth=0.5)
-
+    
     for _, row in df.iterrows():
         try:
-            exec_val = float(row["Nota Execução"]) if pd.notna(row["Nota Execução"]) else None
-            visao_val = float(row["Nota Visão"]) if pd.notna(row["Nota Visão"]) else None
-            url_logo = row["URL Logo"]
-            if exec_val is None or visao_val is None:
-                continue
-        except ValueError:
-            continue
-        
-        img = carregar_imagem(url_logo)
-        if img:
-            ab = AnnotationBbox(img, (visao_val, exec_val), frameon=False)
+            response = requests.get(row["URL Logo"])
+            img_data = BytesIO(response.content)
+            img = plt.imread(img_data, format='png')
+            imagebox = OffsetImage(img, zoom=0.2)
+            ab = AnnotationBbox(imagebox, (row["Nota Visão"], row["Nota Execução"]), frameon=False)
             ax.add_artist(ab)
+        except:
+            ax.scatter(row["Nota Visão"], row["Nota Execução"], marker='o', color='blue', s=100)
     
-    st.pyplot(fig)
-    
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("⬅️ Voltar"):
+    return fig
+
+# ------------------
+# INTERFACE PRINCIPAL
+# ------------------
+st.title("📊 Análise de Concorrência")
+st.subheader("Adicione, edite e visualize o posicionamento dos concorrentes.")
+
+# Formulário para adicionar novos concorrentes
+with st.expander("➕ Adicionar Concorrente"):
+    novo_nome = st.text_input("Nome do Concorrente")
+    nova_exec = st.number_input("Nota Execução", 1.0, 5.0, 3.0, step=0.1)
+    nova_visao = st.number_input("Nota Visão", 1.0, 5.0, 3.0, step=0.1)
+    nova_url = st.text_input("URL do Logo")
+    if st.button("Adicionar"):
+        if novo_nome and nova_url:
+            st.session_state.concorrentes = pd.concat([
+                st.session_state.concorrentes,
+                pd.DataFrame([[novo_nome, nova_exec, nova_visao, nova_url]], columns=st.session_state.concorrentes.columns)
+            ], ignore_index=True)
+            st.success(f"{novo_nome} adicionado!")
             st.experimental_rerun()
-    with col2:
-        img_bytes = BytesIO()
-        fig.savefig(img_bytes, format='png')
-        img_bytes.seek(0)
-        st.download_button("📥 Salvar imagem", img_bytes, file_name="matriz_gartner.png", mime="image/png")
+
+# Exibe a tabela editável
+st.write("### 📋 Lista de Concorrentes")
+st.session_state.concorrentes = st.data_editor(st.session_state.concorrentes, num_rows="dynamic")
+
+# Botão para gerar gráfico
+if st.button("📈 Gerar Gráfico"):
+    fig = gerar_grafico(st.session_state.concorrentes)
+    st.pyplot(fig)
+
+# Baixar o gráfico como imagem
+if "grafico_gerado" in st.session_state and st.session_state.grafico_gerado:
+    st.download_button("📥 Baixar Gráfico", data=fig.savefig(BytesIO(), format="png"), file_name="grafico.png", mime="image/png")
 
 
