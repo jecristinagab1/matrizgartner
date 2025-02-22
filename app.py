@@ -32,25 +32,6 @@ df = st.session_state.df
 # Editor de dados
 df = st.data_editor(df, num_rows="dynamic")
 
-# Botão para adicionar concorrente
-if st.button("➕ Adicionar Concorrente"):
-    novo_concorrente = pd.DataFrame([["Novo Concorrente", None, None, ""]], columns=df.columns)
-    st.session_state.df = pd.concat([df, novo_concorrente], ignore_index=True)
-    st.experimental_rerun()
-
-# Caixa de texto para colar notas
-notas_coladas = st.text_area("📋 Cole as notas aqui (Execução\tVisão)")
-if st.button("Aplicar colagem"):
-    try:
-        linhas = [linha.replace(",", ".").split('\t') for linha in notas_coladas.strip().split('\n')]
-        notas_df = pd.DataFrame(linhas, columns=["Nota Execução", "Nota Visão"])
-        notas_df = notas_df.astype(float)
-        df.loc[:len(notas_df)-1, ["Nota Execução", "Nota Visão"]] = notas_df.values
-        st.session_state.df = df
-        st.experimental_rerun()
-    except Exception as e:
-        st.error(f"Erro ao processar as notas: {e}")
-
 # Função para carregar imagem
 @st.cache_data
 def carregar_imagem(url_logo):
