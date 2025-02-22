@@ -35,7 +35,7 @@ df = st.data_editor(df, num_rows="dynamic")
 # Corrige colagem de notas com vírgula
 for col in ["Nota Execução", "Nota Visão"]:
     df[col] = df[col].astype(str).replace("None", "").str.replace(",", ".", regex=True)
-    df[col] = pd.to_numeric(df[col], errors='coerce')
+    df[col] = pd.to_numeric(df[col], errors='coerce').astype("Float64")
 
 st.session_state.df = df
 
