@@ -30,13 +30,12 @@ if "df" not in st.session_state:
 df = st.session_state.df
 
 # Editor de dados
-df["Nota Execução"] = df["Nota Execução"].astype(str)
-df["Nota Visão"] = df["Nota Visão"].astype(str)
 df = st.data_editor(df, num_rows="dynamic")
 
 # Corrige colagem de notas com vírgula
 for col in ["Nota Execução", "Nota Visão"]:
-    df[col] = df[col].str.replace(",", ".", regex=True).astype(float)
+    df[col] = df[col].astype(str).replace("None", "").str.replace(",", ".", regex=True)
+    df[col] = pd.to_numeric(df[col], errors='coerce')
 
 st.session_state.df = df
 
@@ -48,7 +47,7 @@ def carregar_imagem(url_logo):
     try:
         response = requests.get(url_logo)
         img_data = BytesIO(response.content)
-        return OffsetImage(plt.imread(img_data, format='png'), zoom=0.10)  # Reduz tamanho do logo
+        return OffsetImage(plt.imread(img_data, format='png'), zoom=0.08)  # Reduz tamanho do logo
     except:
         return None
 
