@@ -5,8 +5,10 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import requests
 from io import BytesIO
 
+# Configuração da página
 st.set_page_config(page_title="Análise de Concorrência", layout="wide")
 
+# Inicialização do estado
 if "concorrentes" not in st.session_state:
     st.session_state.concorrentes = pd.DataFrame(
         columns=["Concorrente", "Nota Execução", "Nota Visão", "URL Logo"]
@@ -15,6 +17,7 @@ if "concorrentes" not in st.session_state:
 if "gerar_grafico" not in st.session_state:
     st.session_state.gerar_grafico = False
 
+# Função para gerar o gráfico
 def gerar_grafico(df):
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_xlim(1, 5)
@@ -38,9 +41,11 @@ def gerar_grafico(df):
     
     return fig
 
+# Título e descrição
 st.title("📊 Análise de Concorrência")
 st.subheader("Adicione, edite e visualize o posicionamento dos concorrentes.")
 
+# Adicionar novo concorrente
 with st.expander("➕ Adicionar Concorrente"):
     novo_nome = st.text_input("Nome do Concorrente")
     nova_exec = st.number_input("Nota Execução", 1.0, 5.0, 3.0, step=0.1)
@@ -56,15 +61,21 @@ with st.expander("➕ Adicionar Concorrente"):
             st.session_state.concorrentes = pd.concat([
                 st.session_state.concorrentes, novo_concorrente
             ], ignore_index=True)
-            st.experimental_rerun()
+            st.success("Concorrente adicionado com sucesso!")
 
+# Lista de concorrentes
 st.write("### 📋 Lista de Concorrentes")
-st.session_state.concorrentes = st.data_editor(st.session_state.concorrentes, num_rows="dynamic")
+st.session_state.concorrentes = st.data_editor(
+    st.session_state.concorrentes,
+    num_rows="dynamic",
+    key="data_editor"
+)
 
+# Botão para gerar o gráfico
 if st.button("📈 Gerar Gráfico"):
     st.session_state.gerar_grafico = True
-    st.experimental_rerun()
 
+# Exibir o gráfico
 if st.session_state.gerar_grafico:
     fig = gerar_grafico(st.session_state.concorrentes)
     st.pyplot(fig)
