@@ -12,18 +12,18 @@ st.title("📊 Matriz de Gartner Interativa")
 # Inicializa ou recupera os dados
 if "df" not in st.session_state:
     dados_iniciais = [
-        ["FluencyPass", None, None, "https://i.ibb.co/NVbyMKD/fluency-pass.png"],
-        ["Fluency Academy", None, None, "https://i.ibb.co/7tRhz0r/fluency-academy.png"],
-        ["Open English", None, None, "https://i.ibb.co/stC9gr6/open-english.png"],
-        ["GoFluent", None, None, "https://i.ibb.co/Dkqf08Y/gofluent.png"],
-        ["Rosetta", None, None, "https://i.ibb.co/HqDKqzg/rosetta.png"],
-        ["Voxy", None, None, "https://i.ibb.co/bbXm5vN/voxy.png"],
-        ["Nulinga", None, None, "https://i.ibb.co/xSbgHzW/nulinga.png"],
-        ["Berlitz", None, None, "https://i.ibb.co/y0TmqmS/berlitz.png"],
-        ["Yázigi", None, None, "https://i.ibb.co/wM1n1Bh/yazigi.png"],
-        ["Flexge", None, None, "https://i.ibb.co/cXtpCqy/flexge.png"],
-        ["Preply", None, None, "https://i.ibb.co/WDJtvmK/preply.png"],
-        ["English Live", None, None, "https://i.ibb.co/8gyt7HK/english-live.png"]
+        ["FluencyPass", 3.4, 3.0, "https://i.ibb.co/NVbyMKD/fluency-pass.png"],
+        ["Fluency Academy", 3.2, 3.0, "https://i.ibb.co/7tRhz0r/fluency-academy.png"],
+        ["Open English", 4.0, 4.0, "https://i.ibb.co/stC9gr6/open-english.png"],
+        ["GoFluent", 3.0, 3.2, "https://i.ibb.co/Dkqf08Y/gofluent.png"],
+        ["Rosetta", 2.4, 2.6, "https://i.ibb.co/HqDKqzg/rosetta.png"],
+        ["Voxy", 3.6, 4.0, "https://i.ibb.co/bbXm5vN/voxy.png"],
+        ["Nulinga", 2.6, 2.4, "https://i.ibb.co/xSbgHzW/nulinga.png"],
+        ["Berlitz", 2.8, 3.0, "https://i.ibb.co/y0TmqmS/berlitz.png"],
+        ["Yázigi", 2.8, 2.4, "https://i.ibb.co/wM1n1Bh/yazigi.png"],
+        ["Flexge", 3.2, 2.8, "https://i.ibb.co/cXtpCqy/flexge.png"],
+        ["Preply", 3.6, 2.8, "https://i.ibb.co/WDJtvmK/preply.png"],
+        ["English Live", 4.6, 3.8, "https://i.ibb.co/8gyt7HK/english-live.png"]
     ]
     st.session_state.df = pd.DataFrame(dados_iniciais, columns=["Concorrente", "Nota Execução", "Nota Visão", "URL Logo"])
 
@@ -58,8 +58,8 @@ if st.button("📈 Gerar gráfico"):
 
     for _, row in df.iterrows():
         try:
-            exec_val = float(row["Nota Execução"]) if row["Nota Execução"] is not None else None
-            visao_val = float(row["Nota Visão"]) if row["Nota Visão"] is not None else None
+            exec_val = float(row["Nota Execução"]) if pd.notna(row["Nota Execução"]) else None
+            visao_val = float(row["Nota Visão"]) if pd.notna(row["Nota Visão"]) else None
             url_logo = row["URL Logo"]
             if exec_val is None or visao_val is None:
                 continue
@@ -78,4 +78,8 @@ if st.button("📈 Gerar gráfico"):
         if st.button("⬅️ Voltar"):
             st.experimental_rerun()
     with col2:
-        st.download_button("📥 Salvar imagem", fig.savefig, file_name="matriz_gartner.png", mime="image/png")
+        img_bytes = BytesIO()
+        fig.savefig(img_bytes, format='png')
+        img_bytes.seek(0)
+        st.download_button("📥 Salvar imagem", img_bytes, file_name="matriz_gartner.png", mime="image/png")
+
