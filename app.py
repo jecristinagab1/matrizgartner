@@ -27,25 +27,31 @@ dados_iniciais = [
 
 df = pd.DataFrame(dados_iniciais, columns=["Concorrente", "Nota Execução", "Nota Visão", "URL Logo"])
 
-df = st.data_editor(df, num_rows="dynamic", hide_index=True, use_container_width=True)
-
-def adicionar_novo_concorrente():
-    global df
-    novo_concorrente = ["Novo Concorrente", None, None, ""]
-    df = pd.concat([df, pd.DataFrame([novo_concorrente], columns=df.columns)], ignore_index=True)
-    st.experimental_rerun()
-
+# Caixa de texto para colar notas
 notas_coladas = st.text_area("📋 Cole as notas aqui (Execução\tVisão)")
 if st.button("Aplicar colagem"):
     try:
-        linhas = [linha.split('\t') for linha in notas_coladas.strip().split('\n')]
-        notas_df = pd.DataFrame(linhas[1:], columns=["Nota Execução", "Nota Visão"])
+        linhas = [linha.replace(",", ".").split('\t') for linha in notas_coladas.strip().split('\n')]
+        notas_df = pd.DataFrame(linhas, columns=["Nota Execução", "Nota Visão"])
         notas_df = notas_df.astype(float)
-        df.loc[:len(notas_df)-1, "Nota Execução"] = notas_df["Nota Execução"].values
-        df.loc[:len(notas_df)-1, "Nota Visão"] = notas_df["Nota Visão"].values
+        df.loc[:len(notas_df)-1, ["Nota Execução", "Nota Visão"]] = notas_df.values
     except Exception as e:
         st.error(f"Erro ao processar as notas: {e}")
 
+# Função para adicionar concorrente
+def adicionar_novo_concorrente():
+    df.loc[len(df)] = ["Novo Concorrente", None, None, ""]
+    st.experimental_rerun()
+
+col1, col2 = st.columns([1, 1])
+with col1:
+    if st.button("➕ Adicionar concorrente"):
+        adicionar_novo_concorrente()
+with col2:
+    if st.button("📋 Colar Notas (Exec, Visão)"):
+        st.experimental_rerun()
+
+# Função para carregar imagem
 @st.cache_data
 def carregar_imagem(url_logo):
     if not url_logo:
@@ -57,16 +63,7 @@ def carregar_imagem(url_logo):
     except:
         return None
 
-col1, col2, col3 = st.columns([2, 2, 4])
-with col1:
-    gerar_grafico = st.button("📈 Gerar gráfico", key="gerar_grafico")
-with col2:
-    if st.button("➕ Adicionar concorrente", key="adicionar_concorrente"):
-        adicionar_novo_concorrente()
-with col3:
-    colar_notas = st.button("📋 Colar Notas (Exec, Visão)", key="colar_notas")
-
-if gerar_grafico:
+if st.button("📈 Gerar gráfico"):
     st.subheader("📊 Gráfico da Matriz de Gartner")
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.set_xlim(1, 5)
